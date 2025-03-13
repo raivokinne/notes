@@ -21,6 +21,10 @@ export function NoteShow() {
         const data = await show(id);
         setNote(data);
         setSelectedTags(data.tags || []);
+
+        if (contentRef.current) {
+          contentRef.current.textContent = data.content;
+        }
       }
     }
     fetchNote();
@@ -178,36 +182,35 @@ export function NoteShow() {
             contentEditable="plaintext-only"
             id="note"
             onInput={handleNoteInput}
-          >
-            {note.attachments && note.attachments.length > 0 && (
-              <div className="mt-4 pt-4">
-                <div className="flex flex-wrap gap-4">
-                  {note.attachments.map((attachment) => (
-                    <div key={attachment.id}>
-                      {attachment.mime_type.includes("image") ? (
-                        <div>
-                          <img
-                            src={`http://localhost:8000/storage/${attachment.path}`}
-                            alt={attachment.filename}
-                            className="max-w-xs max-h-32 rounded"
-                          />
-                        </div>
-                      ) : (
-                        <a
-                          href={`http://localhost:8000/storage/${attachment.path}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline"
-                        >
-                          {attachment.filename}
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
+          ></div>
+          {note.attachments && note.attachments.length > 0 && (
+            <div className="mt-4 pt-4">
+              <div className="flex flex-wrap gap-4">
+                {note.attachments.map((attachment) => (
+                  <div key={attachment.id}>
+                    {attachment.mime_type.includes("image") ? (
+                      <div>
+                        <img
+                          src={`http://localhost:8000/storage/${attachment.path}`}
+                          alt={attachment.filename}
+                          className="max-w-xs max-h-32 rounded"
+                        />
+                      </div>
+                    ) : (
+                      <a
+                        href={`http://localhost:8000/storage/${attachment.path}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        {attachment.filename}
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
