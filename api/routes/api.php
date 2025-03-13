@@ -14,7 +14,11 @@ Route::prefix('/v1')->group(function () {
         Route::post('/register', [UserController::class, 'register'])->name('register');
     });
     Route::prefix('/auth')->middleware('auth:sanctum')->group(function () {
-        Route::get('/logout', [UserController::class, 'logout'])->name('logout');
+        Route::post('/logout', [UserController::class, 'logout'])->name('logout');
+
+        Route::get('/user', function (Request $request) {
+            return $request->user();
+        });
 
         Route::apiResource('notes', NoteController::class);
         Route::apiResource('tags', TagController::class);
@@ -23,6 +27,3 @@ Route::prefix('/v1')->group(function () {
     });
 });
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');

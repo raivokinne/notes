@@ -68,6 +68,8 @@ class UserController extends Controller
 
         $user = User::query()->where('username', $request['username'])->first();
 
+        Auth::login($user);
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

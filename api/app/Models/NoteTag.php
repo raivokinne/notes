@@ -1,13 +1,13 @@
 <?php
-
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NoteTag extends Model
 {
-    public $timestamps = false;
+    use HasFactory;
 
     protected $fillable = [
         'note_id',
@@ -15,7 +15,7 @@ class NoteTag extends Model
     ];
 
     /**
-     * @return BelongsTo<Note,NoteTag>
+     * @return BelongsTo<Note>
      */
     public function note(): BelongsTo
     {
@@ -23,7 +23,7 @@ class NoteTag extends Model
     }
 
     /**
-     * @return BelongsTo<Tag,NoteTag>
+     * @return BelongsTo<Tag>
      */
     public function tag(): BelongsTo
     {

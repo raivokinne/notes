@@ -12,7 +12,7 @@ class TagController extends Controller
      */
     public function index(): JsonResponse
     {
-        $tags = Tag::all();
+        $tags = Tag::query()->with('notes')->get();
 
         return response()->json([
             'success' => true,

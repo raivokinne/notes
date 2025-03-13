@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('note_attachments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('note_id')->constrained()->onDelete('cascade');
-            $table->binary('image');
+            $table->string('filename');
+            $table->string('path');
+            $table->string('mime_type')->nullable();
+            $table->unsignedBigInteger('size')->nullable();
             $table->timestamps();
         });
     }

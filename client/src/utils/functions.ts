@@ -1,4 +1,5 @@
 import axios from "axios";
+import { format, parseISO } from "date-fns";
 
 export async function csrf() {
     try {
@@ -8,3 +9,12 @@ export async function csrf() {
         console.log(error);
     }
 }
+
+export const formatDate = (dateString: string) => {
+    try {
+        const date = parseISO(dateString);
+        return format(date, "MMM d, yyyy 'at' h:mm a");
+    } catch (error) {
+        return dateString;
+    }
+};

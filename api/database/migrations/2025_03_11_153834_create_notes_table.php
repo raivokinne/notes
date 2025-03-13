@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('title', 255);
-            $table->text('content');
+            $table->string('title', 255)->default("New Note");
+            $table->text('content')->nullable();
             $table->boolean('is_archived')->default(false);
             $table->timestamps();
         });

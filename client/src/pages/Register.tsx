@@ -21,7 +21,7 @@ export function Register() {
         storage.set("token", res.data.token);
         toast.success(res.data.message);
         form.reset();
-        navigate("/login");
+        navigate("/notes");
       } else {
         toast.error(res.data.message);
       }
