@@ -4,7 +4,8 @@ import { useNotes } from "../hooks/useNotes";
 import { useEffect, useState, useRef } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
-import { FaFileCirclePlus } from "react-icons/fa6";
+import toast from "react-hot-toast";
+import { setInterval } from "timers/promises";
 
 export function NoteShow() {
   const { id } = useParams<{ id: string }>();
@@ -18,19 +19,23 @@ export function NoteShow() {
   useEffect(() => {
     async function fetchNote() {
       if (id) {
-        const data = await show(id);
+        const data: Note = await show(id);
         setNote(data);
         setSelectedTags(data.tags || []);
 
         if (contentRef.current) {
-          contentRef.current.textContent = data.content;
+          contentRef.current.innerHTML = data.content;
         }
+
+        data.attachments?.map((attachment) => {
+          insertImage("http://localhost:8000/storage/" + attachment.path);
+        });
       }
     }
     fetchNote();
   }, [id, show]);
 
-  const handleNoteInput = (e: React.FormEvent<HTMLDivElement>) => {
+  const handleNoteInput = async (e: React.FormEvent<HTMLDivElement>) => {
     setNote({
       ...note,
       content: e.currentTarget.innerHTML,
@@ -47,8 +52,9 @@ export function NoteShow() {
         tags: selectedTags,
       });
       setNote(data);
+      toast.success("Changes has been saved");
     } catch (error) {
-      console.error("Failed to save note:", error);
+      toast.error("Failed to save note");
     } finally {
       setIsSaving(false);
     }
@@ -76,20 +82,36 @@ export function NoteShow() {
     setSelectedTags((prev) => prev.filter((tag) => tag.id !== tagId));
   };
 
-  const handleUploadAttachment = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
-    if (file && note.id) {
-      try {
-        await uploadAttachment(note.id, file);
-        if (id) {
-          const updatedNote = await show(id);
-          setNote(updatedNote);
+  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          await uploadAttachment(note.id, file);
         }
-      } catch (error) {
-        console.error("Failed to upload attachment:", error);
       }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        await uploadAttachment(note.id, file);
+      }
+    }
+  };
+
+  const insertImage = (url: string) => {
+    if (contentRef.current) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.style.maxWidth = "30%";
+      img.style.display = "block";
+      contentRef.current.appendChild(img);
     }
   };
 
@@ -148,22 +170,6 @@ export function NoteShow() {
             </div>
           )}
 
-          <div className="relative flex items-center w-[50px] gap-4">
-            <label
-              htmlFor="file"
-              className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer"
-            >
-              <FaFileCirclePlus />
-            </label>
-            <input
-              type="file"
-              onChange={handleUploadAttachment}
-              name="file"
-              id="file"
-              className="hidden"
-            />
-          </div>
-
           <div className="flex items-center w-[120px]">
             <button
               onClick={saveNote}
@@ -179,38 +185,12 @@ export function NoteShow() {
           <div
             ref={contentRef}
             className="flex-1 p-4 resize-none border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent overflow-auto"
-            contentEditable="plaintext-only"
+            contentEditable={"plaintext-only"}
             id="note"
             onInput={handleNoteInput}
-          ></div>
-          {note.attachments && note.attachments.length > 0 && (
-            <div className="mt-4 pt-4">
-              <div className="flex flex-wrap gap-4">
-                {note.attachments.map((attachment) => (
-                  <div key={attachment.id}>
-                    {attachment.mime_type.includes("image") ? (
-                      <div>
-                        <img
-                          src={`http://localhost:8000/storage/${attachment.path}`}
-                          alt={attachment.filename}
-                          className="max-w-xs max-h-32 rounded"
-                        />
-                      </div>
-                    ) : (
-                      <a
-                        href={`http://localhost:8000/storage/${attachment.path}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        {attachment.filename}
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+          />
         </div>
       </div>
     </Layout>

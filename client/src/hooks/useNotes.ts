@@ -57,7 +57,7 @@ export const useNotes = () => {
             formData.append('file', file);
             formData.append('note_id', noteId.toString());
             const res = await api.post(`/auth/note-attachments`, formData);
-            return res.data.attachment
+            return res.data.noteAttachment
         } catch (error) {
             setErrors(error as Error)
         }
