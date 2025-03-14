@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
 import toast from "react-hot-toast";
+import useMousePosition from "../hooks/useMousePosition";
 
 export function NoteShow() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,7 @@ export function NoteShow() {
   const { data: tags } = useTags();
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const mousePosition = useMousePosition();
 
   useEffect(() => {
     async function fetchNote() {
@@ -23,21 +25,29 @@ export function NoteShow() {
         setSelectedTags(data.tags || []);
 
         if (contentRef.current) {
-          contentRef.current.innerHTML = data.content;
+          contentRef.current.innerHTML = data.content || "";
         }
 
-        data.attachments?.map((attachment) => {
-          insertImage("http://localhost:8000/storage/" + attachment.path);
+        data.attachments?.map((img) => {
+          insertImage("http://localhost:8000/storage/" + img.path);
         });
       }
     }
     fetchNote();
   }, [id, show]);
 
-  const handleNoteInput = async (e: React.FormEvent<HTMLDivElement>) => {
+  const handleNoteInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = e.currentTarget.innerHTML;
+
+    const images = tmp.querySelectorAll("img");
+    images.forEach((img) => img.remove());
+
+    const content = tmp.innerHTML;
+
     setNote({
       ...note,
-      content: e.currentTarget.innerHTML,
+      content,
     });
   };
 
@@ -51,7 +61,7 @@ export function NoteShow() {
         tags: selectedTags,
       });
       setNote(data);
-      toast.success("Changes has been saved");
+      toast.success("Changes have been saved");
     } catch (error) {
       toast.error("Failed to save note");
     } finally {
@@ -81,14 +91,33 @@ export function NoteShow() {
     setSelectedTags((prev) => prev.filter((tag) => tag.id !== tagId));
   };
 
+  const insertImage = (url: string) => {
+    const img = document.createElement("img");
+    img.src = url;
+    img.style.maxWidth = "30%";
+    img.style.display = "block";
+    img.style.margin = "10px 0";
+    img.setAttribute("data-attachment", "true");
+    contentRef.current?.appendChild(img);
+  };
+
   const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
     const items = e.clipboardData.items;
     for (const item of items) {
       if (item.type.startsWith("image/")) {
         e.preventDefault();
         const file = item.getAsFile();
-        if (file) {
-          await uploadAttachment(note.id, file);
+        if (file && note.id) {
+          try {
+            const attachment = await uploadAttachment(note.id, file);
+            insertImage("http://localhost:8000/storage/" + attachment?.path);
+            if (id) {
+              const note = await show(id);
+              setNote(note);
+            }
+          } catch (error) {
+            toast.error("Failed to upload image");
+          }
         }
       }
     }
@@ -98,19 +127,18 @@ export function NoteShow() {
     e.preventDefault();
     const files = e.dataTransfer.files;
     for (const file of files) {
-      if (file.type.startsWith("image/")) {
-        await uploadAttachment(note.id, file);
+      if (file.type.startsWith("image/") && note.id) {
+        try {
+          const attachment = await uploadAttachment(note.id, file);
+          insertImage("http://localhost:8000/storage/" + attachment?.path);
+          if (id) {
+            const note = await show(id);
+            setNote(note);
+          }
+        } catch (error) {
+          toast.error("Failed to upload image");
+        }
       }
-    }
-  };
-
-  const insertImage = (url: string) => {
-    if (contentRef.current) {
-      const img = document.createElement("img");
-      img.src = url;
-      img.style.maxWidth = "30%";
-      img.style.display = "block";
-      contentRef.current.appendChild(img);
     }
   };
 
@@ -184,7 +212,7 @@ export function NoteShow() {
           <div
             ref={contentRef}
             className="flex-1 p-4 resize-none border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent overflow-auto"
-            contentEditable={"plaintext-only"}
+            contentEditable="true"
             id="note"
             onInput={handleNoteInput}
             onPaste={handlePaste}

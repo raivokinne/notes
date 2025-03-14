@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Note } from "../types";
+import { Note, NoteAttachment } from "../types";
 import { api } from "../utils/axios";
 
 export const useNotes = () => {
@@ -57,7 +57,7 @@ export const useNotes = () => {
             formData.append('file', file);
             formData.append('note_id', noteId.toString());
             const res = await api.post(`/auth/note-attachments`, formData);
-            return res.data.noteAttachment
+            return res.data.noteAttachment as NoteAttachment
         } catch (error) {
             setErrors(error as Error)
         }

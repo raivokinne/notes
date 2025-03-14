@@ -12,7 +12,6 @@ export function Notes() {
   const navigate = useNavigate();
   const { data: notes, loading, create } = useNotes();
   const { data: tags } = useTags();
-
   const [filterdNotes, setFilterdNotes] = useState<Note[]>([]);
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export function Notes() {
   };
   return (
     <Layout>
-      <div className="container mx-auto py-6 px-8">
+      <div className="container overflow-scroll h-[80%] fixed mx-auto py-6 px-8">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-4 mb-6">
             <h1 className="text-2xl font-semibold text-gray-800">Your Notes</h1>
