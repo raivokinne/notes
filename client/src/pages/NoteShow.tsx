@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
 import toast from "react-hot-toast";
-import { setInterval } from "timers/promises";
 
 export function NoteShow() {
   const { id } = useParams<{ id: string }>();
