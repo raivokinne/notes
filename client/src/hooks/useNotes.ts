@@ -42,6 +42,14 @@ export const useNotes = () => {
         }
     }, []);
 
+    const note_delete = useCallback(async (noteId: number) => {
+        try {
+            await api.post(`/auth/notes/${noteId}`, { _method: "DELETE" });
+        } catch (error) {
+            setErrors(error as Error);
+        }
+    }, [data]);
+
     const show = useCallback(async (noteId: string) => {
         try {
             const res = await api.get(`/auth/notes/${noteId}`)
@@ -70,6 +78,7 @@ export const useNotes = () => {
         create,
         update,
         show,
+        note_delete,
         uploadAttachment
     };
 };

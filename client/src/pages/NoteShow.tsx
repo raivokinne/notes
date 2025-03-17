@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
 import toast from "react-hot-toast";
-import useMousePosition from "../hooks/useMousePosition";
 
 export function NoteShow() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +14,6 @@ export function NoteShow() {
   const { data: tags } = useTags();
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
-  const mousePosition = useMousePosition();
 
   useEffect(() => {
     async function fetchNote() {
@@ -28,8 +26,8 @@ export function NoteShow() {
           contentRef.current.innerHTML = data.content || "";
         }
 
-        data.attachments?.map((img) => {
-          insertImage("http://localhost:8000/storage/" + img.path);
+        data.attachments?.forEach((img) => {
+          insertImage("http://localhost:8001/storage/" + img.path);
         });
       }
     }
@@ -37,13 +35,15 @@ export function NoteShow() {
   }, [id, show]);
 
   const handleNoteInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const tmp = document.createElement("div");
-    tmp.innerHTML = e.currentTarget.innerHTML;
+    const tmpDiv = document.createElement("div");
+    tmpDiv.innerHTML = e.currentTarget.innerHTML;
 
-    const images = tmp.querySelectorAll("img");
-    images.forEach((img) => img.remove());
+    const images = tmpDiv.querySelectorAll("img");
+    images.forEach((img) => {
+      img.remove();
+    });
 
-    const content = tmp.innerHTML;
+    const content = tmpDiv.innerHTML;
 
     setNote({
       ...note,
@@ -97,7 +97,8 @@ export function NoteShow() {
     img.style.maxWidth = "30%";
     img.style.display = "block";
     img.style.margin = "10px 0";
-    img.setAttribute("data-attachment", "true");
+    img.style.cursor = "move";
+    img.draggable = true;
     contentRef.current?.appendChild(img);
   };
 
@@ -108,16 +109,7 @@ export function NoteShow() {
         e.preventDefault();
         const file = item.getAsFile();
         if (file && note.id) {
-          try {
-            const attachment = await uploadAttachment(note.id, file);
-            insertImage("http://localhost:8000/storage/" + attachment?.path);
-            if (id) {
-              const note = await show(id);
-              setNote(note);
-            }
-          } catch (error) {
-            toast.error("Failed to upload image");
-          }
+          await uploadImageWithPreview(file, note.id);
         }
       }
     }
@@ -128,18 +120,50 @@ export function NoteShow() {
     const files = e.dataTransfer.files;
     for (const file of files) {
       if (file.type.startsWith("image/") && note.id) {
+        await uploadImageWithPreview(file, note.id);
+      }
+    }
+  };
+
+  const uploadImageWithPreview = async (file: File, noteId: number) => {
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      if (event.target?.result) {
+        const previewId = `preview-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 9)}`;
+        const previewImg = document.createElement("img");
+        previewImg.src = event.target.result.toString();
+        previewImg.id = previewId;
+        previewImg.style.maxWidth = "30%";
+        previewImg.style.display = "block";
+        previewImg.style.margin = "10px 0";
+        previewImg.style.opacity = "0.6";
+        contentRef.current?.appendChild(previewImg);
+
         try {
-          const attachment = await uploadAttachment(note.id, file);
-          insertImage("http://localhost:8000/storage/" + attachment?.path);
+          await uploadAttachment(noteId, file);
+          const timeout = setTimeout(() => {
+            const previewToRemove = document.getElementById(previewId);
+            if (previewToRemove) {
+              previewToRemove.remove();
+            }
+          }, 5000);
           if (id) {
             const note = await show(id);
             setNote(note);
           }
+          clearTimeout(timeout);
         } catch (error) {
+          const previewToRemove = document.getElementById(previewId);
+          if (previewToRemove) {
+            previewToRemove.remove();
+          }
           toast.error("Failed to upload image");
         }
       }
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (

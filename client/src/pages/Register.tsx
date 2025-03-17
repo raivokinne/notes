@@ -24,8 +24,11 @@ export function Register() {
         navigate("/notes");
       } else {
         toast.error(res.data.message);
+        toast.error(res.data.errors);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error)
+    }
   };
   return (
     <>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\NoteAttachmentController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\SharedNoteController;
@@ -19,6 +20,8 @@ Route::prefix('/v1')->group(function () {
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
+
+        Route::get('/history', [HistoryController::class, 'index']);
 
         Route::apiResource('notes', NoteController::class);
         Route::apiResource('tags', TagController::class);

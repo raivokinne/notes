@@ -10,7 +10,7 @@ import { Note } from "../types";
 export function Notes() {
   const { authenticated } = useAuth();
   const navigate = useNavigate();
-  const { data: notes, loading, create } = useNotes();
+  const { data: notes, loading, create, note_delete } = useNotes();
   const { data: tags } = useTags();
   const [filterdNotes, setFilterdNotes] = useState<Note[]>([]);
 
@@ -18,7 +18,7 @@ export function Notes() {
     if (!authenticated) {
       navigate("/");
     }
-  }, []);
+  }, [authenticated]);
 
   useEffect(() => {
     if (notes) {
@@ -38,6 +38,10 @@ export function Notes() {
   const handleCreate = async () => {
     await create();
   };
+
+  const handleDelete = async (noteId: number) => {
+    await note_delete(noteId)
+  }
   return (
     <Layout>
       <div className="container overflow-scroll h-[80%] fixed mx-auto py-6 px-8">
@@ -89,15 +93,22 @@ export function Notes() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filterdNotes?.map((note) => (
-              <Link
-                key={note.id}
-                to={`/notes/${note.id}/show`}
-                className="block"
-              >
+              <div className="block">
                 <div className="bg-white border border-gray-200 rounded-lg px-6 py-4 h-full">
-                  <h2 className="text-lg font-medium text-gray-800 mb-2 truncate">
-                    {note.title}
-                  </h2>
+                  <div className="flex justify-between items-center">
+                    <Link
+                      key={note.id}
+                      to={`/notes/${note.id}/show`}
+                      className="text-wrap"
+                    >
+                      <h2 className="text-lg font-medium text-gray-800 mb-2 truncate">
+                        {note.title}
+                      </h2>
+                    </Link>
+                    <button onClick={() => handleDelete(note.id)} className="bg-red-500 rounded-full px-3 py-1 text-white">
+                      x
+                    </button>
+                  </div>
                   <div className="flex justify-between items-center mt-4 text-xs text-gray-500">
                     <span>{formatDate(note.created_at)}</span>
                     {note.tags && note.tags.length > 0 && (
@@ -114,7 +125,7 @@ export function Notes() {
                     )}
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
