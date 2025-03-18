@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "../layouts/Layout";
 import { formatDate } from "../utils/functions";
 import { useAuth } from "../providers/AuthProvider";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { useTags } from "../hooks/useTags";
 import { Note } from "../types";
 
@@ -26,11 +26,14 @@ export function Notes() {
     }
   }, [notes]);
 
-  const handleFillter = (tagId?: number) => {
+  const handleFillter = (e: ChangeEvent<HTMLSelectElement>) => {
+    const tagId = e.target.value;
     tags.filter((tag) => {
       if (!tagId) return setFilterdNotes(notes);
-      if (tag.id === tagId) {
+      if (tag.name === tagId) {
         setFilterdNotes(tag.notes);
+      } else if (tagId === "all") {
+        setFilterdNotes(notes);
       }
     });
   };
@@ -40,8 +43,8 @@ export function Notes() {
   };
 
   const handleDelete = async (noteId: number) => {
-    await note_delete(noteId)
-  }
+    await note_delete(noteId);
+  };
   return (
     <Layout>
       <div className="container overflow-scroll h-[80%] fixed mx-auto py-6 px-8">
@@ -55,18 +58,12 @@ export function Notes() {
                     name="tag"
                     id="tag"
                     className="px-4 py-2 bg-slate-50 rounded"
+                    onChange={handleFillter}
                   >
-                    <option value="all" onClick={() => handleFillter()}>
-                      All
-                    </option>
+                    <option value="all">All</option>
                     {tags.map((tag) => (
                       <>
-                        <option
-                          onClick={() => handleFillter(tag.id)}
-                          value={tag.id}
-                        >
-                          {tag.name}
-                        </option>
+                        <option>{tag.name}</option>
                       </>
                     ))}
                   </select>
@@ -105,7 +102,10 @@ export function Notes() {
                         {note.title}
                       </h2>
                     </Link>
-                    <button onClick={() => handleDelete(note.id)} className="bg-red-500 rounded-full px-3 py-1 text-white">
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className="bg-red-500 rounded-full px-3 py-1 text-white"
+                    >
                       x
                     </button>
                   </div>

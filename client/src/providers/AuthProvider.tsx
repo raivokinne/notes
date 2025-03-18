@@ -49,10 +49,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    fetchCurrentUser();
-  }, [fetchCurrentUser]);
-
   const handleLoginResponse = useCallback(
     (response: {
       data: {

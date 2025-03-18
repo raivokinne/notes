@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Layout } from "../layouts/Layout";
 import { useNotes } from "../hooks/useNotes";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ChangeEvent } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
 import toast from "react-hot-toast";
@@ -45,7 +45,7 @@ export function NoteShow() {
     });
 
     const content = tmpDiv.innerHTML;
-	// const content = e.currentTarget.innerHTML
+    // const content = e.currentTarget.innerHTML
 
     setNote({
       ...note,
@@ -83,10 +83,11 @@ export function NoteShow() {
     return () => clearInterval(timer);
   }, [note.content, note.id]);
 
-  const handleTagChange = (tagId: number) => {
+  const handleTagChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const tagId = parseInt(e.target.value);
     const selectedTag = tags.find((tag: Tag) => tag.id === tagId);
 
-    if (selectedTag && !selectedTags.find((t) => t.id === tagId)) {
+    if (selectedTag) {
       setSelectedTags((prev) => [...prev, selectedTag]);
     }
   };
@@ -188,19 +189,13 @@ export function NoteShow() {
                 name="tag"
                 id="tag"
                 className="px-4 py-1 bg-slate-50 rounded"
-                value=""
+                onChange={handleTagChange}
               >
                 <option value="" disabled>
                   Select a tag
                 </option>
                 {tags.map((tag) => (
-                  <option
-                    key={tag.id}
-                    onClick={() => handleTagChange(tag.id)}
-                    value={tag.id}
-                  >
-                    {tag.name}
-                  </option>
+                  <option key={tag.id}>{tag.name}</option>
                 ))}
               </select>
 
