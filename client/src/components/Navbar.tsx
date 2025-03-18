@@ -22,9 +22,14 @@ export function Navbar() {
               <a href="/">Home</a>
             </li>
             {user && (
-              <li className="font-bold">
-                <a href="/notes">Your Notes</a>
-              </li>
+              <>
+                <li className="font-bold">
+                  <a href="/notes">Your Notes</a>
+                </li>
+                <li className="font-bold">
+                  <a href="/history">History</a>
+                </li>
+              </>
             )}
 
             {user ? (

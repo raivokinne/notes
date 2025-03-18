@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
 import toast from "react-hot-toast";
+import { useKey } from "../hooks/useKey";
 
 export function NoteShow() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +28,7 @@ export function NoteShow() {
         }
 
         data.attachments?.forEach((img) => {
-          insertImage("http://localhost:8001/storage/" + img.path);
+          insertImage("http://localhost:8000/storage/" + img.path);
         });
       }
     }
@@ -44,6 +45,7 @@ export function NoteShow() {
     });
 
     const content = tmpDiv.innerHTML;
+	// const content = e.currentTarget.innerHTML
 
     setNote({
       ...note,
@@ -68,6 +70,8 @@ export function NoteShow() {
       setIsSaving(false);
     }
   };
+
+  useKey("ctrls", saveNote);
 
   useEffect(() => {
     const timer = setInterval(() => {

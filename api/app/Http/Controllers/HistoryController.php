@@ -9,7 +9,7 @@ class HistoryController extends Controller
 {
     public function index(): JsonResponse
     {
-        $notes = History::query()->with(['user', 'note'])->get();
+        $notes = History::query()->with(['user', 'note', 'note.tags'])->get();
 
         return response()->json([
             'success' => true,

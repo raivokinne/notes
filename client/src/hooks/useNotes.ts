@@ -45,6 +45,7 @@ export const useNotes = () => {
     const note_delete = useCallback(async (noteId: number) => {
         try {
             await api.post(`/auth/notes/${noteId}`, { _method: "DELETE" });
+            setData(data.filter((note) => note.id !== noteId))
         } catch (error) {
             setErrors(error as Error);
         }
@@ -71,6 +72,15 @@ export const useNotes = () => {
         }
     }, [])
 
+    const getAllHistory = useCallback(async () => {
+        try {
+            const res = await api.get('/auth/history');
+            return res.data.notes;
+        } catch (error) {
+            setErrors(error as Error)
+        }
+    }, [])
+
     return {
         data,
         errors,
@@ -79,6 +89,7 @@ export const useNotes = () => {
         update,
         show,
         note_delete,
-        uploadAttachment
+        uploadAttachment,
+        getAllHistory
     };
 };

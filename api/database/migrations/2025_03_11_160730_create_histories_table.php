@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('note_id')->constrained()->onDelete('cascade');
             $table->timestamp('expires')->default(Carbon::now()->addDays(30));
-            $table->unique(['user_id', 'note_id']);
             $table->timestamps();
         });
     }

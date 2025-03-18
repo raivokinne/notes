@@ -44,14 +44,9 @@ class NoteController extends Controller
         $note = Note::query()->create([
             'title'       => request('title'),
             'content'     => "",
-            'is_archived' => false,
             'user_id'     => Auth::id(),
-        ]);
-
-        History::query()->create([
-            'note_id' => $note->id,
-            'user_id' => Auth::id(),
-            'expires' => Carbon::now()->addDays(30),
+            'has_history' => false,
+            'expires' => Carbon::now(),
         ]);
 
         return response()->json([
@@ -149,6 +144,21 @@ class NoteController extends Controller
     {
         $note = Note::query()->find($id);
 
+        if (!$note) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Note not found',
+            ], 404);
+        }
+
+        $note->update([
+            'title'       => $note->title,
+            'content'     => $note->content,
+            'user_id'     => $note->user()->id,
+            'has_history' => true,
+            'expires' => Carbon::now()->addDays(30),
+        ]);
+
         $note->delete();
 
         return response()->json([
@@ -156,4 +166,5 @@ class NoteController extends Controller
             'message' => 'Note deleted successfully',
         ], 200);
     }
+
 }

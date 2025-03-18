@@ -31,19 +31,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authenticated, setAuthenticated] = useState(true);
 
-  const fetchCurrentUser = useCallback(async () => {
-    try {
-      const response = await api.get("/auth/user", {
-        headers: {
-          Authorization: `Bearer ${storage.get("token")}`,
-        },
-      });
-      setUser(response.data);
-      setAuthenticated(true);
-    } catch {
-      setUser(null);
-      setAuthenticated(false);
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const response = await api.get("/auth/user", {
+          headers: {
+            Authorization: `Bearer ${storage.get("token")}`,
+          },
+        });
+        setUser(response.data);
+        setAuthenticated(true);
+      } catch {
+        setUser(null);
+        setAuthenticated(false);
+      }
     }
+    fetchUser();
   }, []);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthenticated(false);
       }
     },
-    []
+    [],
   );
 
   const handleRegistrationResponse = useCallback(
@@ -78,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token: string;
       };
     }) => handleLoginResponse(response),
-    [handleLoginResponse]
+    [handleLoginResponse],
   );
 
   const login = useCallback(
@@ -92,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthenticated(false);
       }
     },
-    [handleLoginResponse]
+    [handleLoginResponse],
   );
 
   const register = useCallback(
@@ -106,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthenticated(false);
       }
     },
-    [handleRegistrationResponse]
+    [handleRegistrationResponse],
   );
 
   const logout = useCallback(async () => {
