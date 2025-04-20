@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-export const useKey = (key: unknown, cb: any) => {
+export const useKey = (key: unknown, cb: (event: Event) => Promise<void>) => {
     const callback = useRef(cb)
 
     useEffect(() => {

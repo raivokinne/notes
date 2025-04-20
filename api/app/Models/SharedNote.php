@@ -10,6 +10,7 @@ class SharedNote extends Model
     protected $fillable = [
         'note_id',
         'shared_with_user_id',
+        'token'
     ];
 
     /**

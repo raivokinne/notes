@@ -68,7 +68,7 @@ class DatabaseSeeder extends Seeder
                 'title' => $noteData['title'],
                 'content' => $noteData['content'],
                 'user_id' => 1,
-                'is_archived' => false
+                'in_history' => false
             ]);
 
             foreach ($noteData['tags'] as $tagName) {

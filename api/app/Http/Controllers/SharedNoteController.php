@@ -6,6 +6,7 @@ use App\Models\SharedNote;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class SharedNoteController extends Controller
 {
@@ -37,29 +38,33 @@ class SharedNoteController extends Controller
             $this->incorrectRequest($validate->errors());
         }
 
+        $token = Str::random(32);
+
         $shared_note = SharedNote::query()->create([
             'note_id' => request('note_id'),
             'shared_with_user_id' => request('shared_with_user_id'),
+            'token' => $token,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Shared note created successfully',
-            'sharedNote' => $shared_note
+            'sharedNote' => $shared_note,
+            'share_url' => 'http://localhost:5173/sharenote/' . $shared_note->token,
         ], 200);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(int $id): JsonResponse
+    public function show(string $token): JsonResponse
     {
-        $shared_note = SharedNote::query()->where('id', $id)->first();
+        $shared_note = SharedNote::query()->where('token', $token)->first();
 
         return response()->json([
             'success' => true,
             'message' => 'Your shared note',
-            'sharedNote' => $shared_note
+            'note' => $shared_note,
         ], 200);
     }
 
@@ -69,7 +74,7 @@ class SharedNoteController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $validate = Validator::make($request->all(), [
-            'note_id' => 'required',    
+            'note_id' => 'required',
             'shared_with_user_id' => 'required',
         ]);
 
@@ -98,7 +103,7 @@ class SharedNoteController extends Controller
 
         $shared_note->delete();
 
-        return response()->json([ 
+        return response()->json([
             'success' => true,
             'message' => 'Shared note deleted successfully',
         ], 200);

@@ -34,7 +34,6 @@ export function History() {
     fetchHistory();
   }, []);
 
-
   return (
     <>
       <Layout>

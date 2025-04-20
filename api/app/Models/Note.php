@@ -14,9 +14,9 @@ class Note extends Model
 
     protected $fillable = [
         'title',
-        'content', 
+        'content',
         'user_id',
-        'is_archived',
+        'in_history',
     ];
 
     /**
@@ -33,7 +33,7 @@ class Note extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class, 'note_tags', 'note_id', 'tag_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -42,7 +42,7 @@ class Note extends Model
     public function sharedWith(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'shared_notes', 'note_id', 'shared_with_user_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**

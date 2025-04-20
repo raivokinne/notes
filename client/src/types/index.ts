@@ -8,7 +8,7 @@ export type Note = {
     id: number,
     title: string,
     content: string,
-    is_archived: boolean,
+    in_history: boolean,
     user_id: number,
     tags: Tag[],
     attachments?: NoteAttachment[],

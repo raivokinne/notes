@@ -81,6 +81,18 @@ export const useNotes = () => {
         }
     }, [])
 
+    const shareNote = useCallback(async (noteId: number, sharedWithUserId: number) => {
+        try {
+            const res = await api.post("/auth/shared-notes", {
+                note_id: noteId,
+                shared_with_user_id: sharedWithUserId
+            });
+            return res.data.share_url;
+        } catch (error) {
+            setErrors(error as Error);
+        }
+    }, []);
+
     return {
         data,
         errors,
@@ -90,6 +102,7 @@ export const useNotes = () => {
         show,
         note_delete,
         uploadAttachment,
-        getAllHistory
+        getAllHistory,
+        shareNote
     };
 };

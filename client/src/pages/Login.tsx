@@ -1,32 +1,18 @@
 import { useNavigate } from "react-router";
 import { Layout } from "../layouts/Layout";
-import { api } from "../utils/axios";
-import { csrf } from "../utils/functions";
 import { FormEvent } from "react";
-import { storage } from "../utils/storage";
-import toast from "react-hot-toast";
+import { useAuth } from "../providers/AuthProvider";
 
 export function Login() {
+  const { login } = useAuth()
   const navigate = useNavigate();
   const onsubmit = async (ev: FormEvent) => {
     ev.preventDefault();
     const form = ev.target as HTMLFormElement;
     const formData = new FormData(form);
     const formDataObj = Object.fromEntries(formData);
-    try {
-      await csrf();
-      const res = await api.post("/guest/login", formDataObj);
-      if (res.status === 200) {
-        storage.set("token", res.data.token);
-        toast.success(res.data.message);
-        form.reset();
-        navigate("/notes");
-      } else {
-        toast.error(res.data.message);
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    await login(formDataObj)
+    navigate("/notes")
   };
   return (
     <>

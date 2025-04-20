@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Layout } from "../layouts/Layout";
 import { useNotes } from "../hooks/useNotes";
-import { useEffect, useState, useRef, ChangeEvent } from "react";
+import { useEffect, useState, useRef, ChangeEvent, useCallback } from "react";
 import { Note, Tag } from "../types";
 import { useTags } from "../hooks/useTags";
 import toast from "react-hot-toast";
@@ -15,6 +15,8 @@ export function NoteShow() {
   const { data: tags } = useTags();
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const draggingImgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     async function fetchNote() {
@@ -40,20 +42,16 @@ export function NoteShow() {
     tmpDiv.innerHTML = e.currentTarget.innerHTML;
 
     const images = tmpDiv.querySelectorAll("img");
-    images.forEach((img) => {
-      img.remove();
-    });
+    images.forEach((img) => img.remove());
 
     const content = tmpDiv.innerHTML;
-    // const content = e.currentTarget.innerHTML
-
     setNote({
       ...note,
       content,
     });
   };
 
-  const saveNote = async () => {
+  const saveNote = useCallback(async () => {
     if (!id || isSaving || !note.content) return;
 
     setIsSaving(true);
@@ -69,7 +67,7 @@ export function NoteShow() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [id, isSaving, note, selectedTags, update]);
 
   useKey("ctrls", saveNote);
 
@@ -81,12 +79,11 @@ export function NoteShow() {
     }, 30000);
 
     return () => clearInterval(timer);
-  }, [note.content, note.id]);
+  }, [note.content, note.id, saveNote]);
 
   const handleTagChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const tagId = parseInt(e.target.value);
-    const selectedTag = tags.find((tag: Tag) => tag.id === tagId);
-
+    const tagName = e.target.value;
+    const selectedTag = tags.find((tag: Tag) => tag.name === tagName);
     if (selectedTag) {
       setSelectedTags((prev) => [...prev, selectedTag]);
     }
@@ -96,14 +93,58 @@ export function NoteShow() {
     setSelectedTags((prev) => prev.filter((tag) => tag.id !== tagId));
   };
 
+  function mouseDown(e: MouseEvent) {
+    const img = e.target as HTMLImageElement;
+    if (!img) return;
+
+    e.preventDefault();
+    setIsDragging(true);
+    draggingImgRef.current = img;
+
+    const rect = img.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    img.setAttribute("data-offset-x", offsetX.toString());
+    img.setAttribute("data-offset-y", offsetY.toString());
+
+    document.addEventListener("mousemove", mouseMove);
+    document.addEventListener("mouseup", mouseUp);
+  }
+
+  function mouseMove(e: MouseEvent) {
+    const img = draggingImgRef.current;
+    if (isDragging && img) {
+      e.preventDefault();
+
+      const offsetX = parseInt(img.getAttribute("data-offset-x") || "0", 10);
+      const offsetY = parseInt(img.getAttribute("data-offset-y") || "0", 10);
+
+      const newLeft = e.clientX - offsetX;
+      const newTop = e.clientY - offsetY;
+
+      img.style.left = `${newLeft}px`;
+      img.style.top = `${newTop}px`;
+    }
+  }
+
+  function mouseUp() {
+    setIsDragging(false);
+    draggingImgRef.current = null;
+
+    document.removeEventListener("mousemove", mouseMove);
+    document.removeEventListener("mouseup", mouseUp);
+  }
+
   const insertImage = (url: string) => {
     const img = document.createElement("img");
     img.src = url;
+    img.addEventListener("mousedown", mouseDown);
     img.style.maxWidth = "30%";
     img.style.display = "block";
     img.style.margin = "10px 0";
     img.style.cursor = "move";
-    img.draggable = true;
+    img.style.position = "absolute";
     contentRef.current?.appendChild(img);
   };
 
@@ -144,20 +185,28 @@ export function NoteShow() {
         previewImg.style.display = "block";
         previewImg.style.margin = "10px 0";
         previewImg.style.opacity = "0.6";
+        previewImg.style.position = "absolute";
+        previewImg.style.left = "0px";
+        previewImg.style.top = "0px";
+        previewImg.addEventListener("mousedown", mouseDown);
+
         contentRef.current?.appendChild(previewImg);
 
         try {
           await uploadAttachment(noteId, file);
+
           const timeout = setTimeout(() => {
             const previewToRemove = document.getElementById(previewId);
             if (previewToRemove) {
               previewToRemove.remove();
             }
           }, 5000);
+
           if (id) {
             const note = await show(id);
             setNote(note);
           }
+
           clearTimeout(timeout);
         } catch (error) {
           const previewToRemove = document.getElementById(previewId);

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('note_id')->constrained()->onDelete('cascade');
             $table->foreignId('shared_with_user_id')->constrained('users')->onDelete('cascade');
-            $table->unique(['note_id', 'shared_with_user_id']);
+            $table->string('token');
             $table->timestamps();
         });
     }

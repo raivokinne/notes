@@ -12,7 +12,7 @@ export function Notes() {
   const navigate = useNavigate();
   const { data: notes, loading, create, note_delete } = useNotes();
   const { data: tags } = useTags();
-  const [filterdNotes, setFilterdNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
 
   useEffect(() => {
     if (!authenticated) {
@@ -22,18 +22,18 @@ export function Notes() {
 
   useEffect(() => {
     if (notes) {
-      setFilterdNotes(notes);
+      setFilteredNotes(notes.filter((note) => note.in_history !== true));
     }
   }, [notes]);
 
-  const handleFillter = (e: ChangeEvent<HTMLSelectElement>) => {
-    const tagId = e.target.value;
+  const handleFilter = (e: ChangeEvent<HTMLSelectElement>) => {
+    const tagName = e.target.value;
     tags.filter((tag) => {
-      if (!tagId) return setFilterdNotes(notes);
-      if (tag.name === tagId) {
-        setFilterdNotes(tag.notes);
-      } else if (tagId === "all") {
-        setFilterdNotes(notes);
+      if (!tagName) return setFilteredNotes(notes);
+      if (tag.name === tagName) {
+        setFilteredNotes(tag.notes);
+      } else if (tagName === "all") {
+        setFilteredNotes(notes);
       }
     });
   };
@@ -45,6 +45,7 @@ export function Notes() {
   const handleDelete = async (noteId: number) => {
     await note_delete(noteId);
   };
+
   return (
     <Layout>
       <div className="container overflow-scroll h-[80%] fixed mx-auto py-6 px-8">
@@ -58,7 +59,7 @@ export function Notes() {
                     name="tag"
                     id="tag"
                     className="px-4 py-2 bg-slate-50 rounded"
-                    onChange={handleFillter}
+                    onChange={handleFilter}
                   >
                     <option value="all">All</option>
                     {tags.map((tag) => (
@@ -81,7 +82,7 @@ export function Notes() {
 
         {loading ? (
           <p>Loading...</p>
-        ) : filterdNotes?.length === 0 ? (
+        ) : filteredNotes?.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600">
               No notes found. Create your first note to get started.
@@ -89,7 +90,7 @@ export function Notes() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filterdNotes?.map((note) => (
+            {filteredNotes?.map((note) => (
               <div className="block">
                 <div className="bg-white border border-gray-200 rounded-lg px-6 py-4 h-full">
                   <div className="flex justify-between items-center">

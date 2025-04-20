@@ -9,6 +9,7 @@ export function Navbar() {
     e.preventDefault();
     await logout();
   };
+
   return (
     <>
       <nav className="flex justify-center items-center w-full h-[80px] bg-slate-300 fixed top-0">

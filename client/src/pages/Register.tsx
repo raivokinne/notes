@@ -24,10 +24,10 @@ export function Register() {
         navigate("/notes");
       } else {
         toast.error(res.data.message);
-        toast.error(res.data.errors);
+        toast.error(res.data.errors[0]);
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   };
   return (

@@ -18,7 +18,11 @@ class NoteController extends Controller
      */
     public function index(): JsonResponse
     {
-        $notes = Note::query()->where('user_id', Auth::id())->with(['tags', 'user', 'sharedWith', 'attachments'])->get();
+        $notes = Note::query()
+            ->where('user_id', Auth::user()->id)
+            ->where('in_history', '=', 0)
+            ->with(['tags', 'user', 'sharedWith', 'attachments'])
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -42,11 +46,9 @@ class NoteController extends Controller
         }
 
         $note = Note::query()->create([
-            'title'       => request('title'),
-            'content'     => "",
-            'user_id'     => Auth::id(),
-            'has_history' => false,
-            'expires' => Carbon::now(),
+            'title'   => request('title'),
+            'content' => "",
+            'user_id' => Auth::user()->id,
         ]);
 
         return response()->json([
@@ -95,10 +97,10 @@ class NoteController extends Controller
         }
 
         $note->update([
-            'title'       => $request->input('title'),
-            'content'     => $request->input('content'),
-            'is_archived' => $request->input('is_archived', false),
-            'user_id'     => Auth::id(),
+            'title'      => $request->input('title'),
+            'content'    => $request->input('content'),
+            'in_history' => $request->input('in_history', false),
+            'user_id'    => Auth::id(),
         ]);
 
         NoteTag::query()->where('note_id', $note->id)->delete();
@@ -144,26 +146,37 @@ class NoteController extends Controller
     {
         $note = Note::query()->find($id);
 
-        if (!$note) {
+        if (! $note) {
             return response()->json([
                 'success' => false,
                 'message' => 'Note not found',
             ], 404);
         }
 
-        $note->update([
-            'title'       => $note->title,
-            'content'     => $note->content,
-            'user_id'     => $note->user()->id,
-            'has_history' => true,
-            'expires' => Carbon::now()->addDays(30),
-        ]);
+        $existingHistory = History::query()
+            ->where('note_id', $note->id)
+            ->where('user_id', Auth::user()->id)
+            ->first();
 
-        $note->delete();
+        if (! $existingHistory) {
+            $note->update([
+                'in_history' => 1,
+            ]);
 
+            History::query()->create([
+                'note_id' => $note->id,
+                'user_id' => Auth::user()->id,
+                'expires' => Carbon::now()->addDays(30),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Note saved to history',
+            ], 200);
+        }
         return response()->json([
-            'success' => true,
-            'message' => 'Note deleted successfully',
+            'success' => false,
+            'message' => 'Note failed saved to history',
         ], 200);
     }
 
