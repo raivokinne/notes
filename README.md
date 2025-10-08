@@ -129,7 +129,7 @@ yarn install
 cp .env.example .env
 ```
 
-5. **Start the React development server**
+4. **Start the React development server**
 ```bash
 npm run dev
 # or
